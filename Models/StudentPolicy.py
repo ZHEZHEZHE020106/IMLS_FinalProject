@@ -6,8 +6,8 @@ import torch.nn as nn
 class StudentPolicy(nn.Module):
     def __init__(self, encoder, latent_dim=32, hidden_dim=64):
         super().__init__()
-        self.encoder = encoder  # 可选冻结
-        # 简化的LAM，只用一层
+        self.encoder = encoder
+        # Simplfied LAM
         self.lam = nn.Linear(encoder.embedding_dim, latent_dim)
 
     def forward(self, img):

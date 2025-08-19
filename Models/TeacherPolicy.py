@@ -4,24 +4,24 @@ import torch.nn as nn
 class TeacherPolicy(nn.Module):
     def __init__(self, encoder, vq, latent_dim=32, hidden_dim=128, action_dim=8):
         super().__init__()
-        self.encoder = encoder    # 冻结或可选微调
-        self.vq = vq              # 冻结VQ
-        # 正向Latent Action Model (LAM)
+        self.encoder = encoder    
+        self.vq = vq              
+        # Latent Action Model (LAM)
         self.lam = nn.Sequential(
             nn.Linear(encoder.embedding_dim, hidden_dim),
             nn.ReLU(),
             nn.Linear(hidden_dim, latent_dim)
         )
-        # Action Decoder: latent -> 连续摇杆 + 离散按键 logits
+        # Action Decoder
         self.action_decoder = nn.Sequential(
             nn.Linear(latent_dim, hidden_dim),
             nn.ReLU(),
         )
-        self.stick_head = nn.Linear(hidden_dim, action_dim - 4)  # 连续摇杆维度
-        self.button_head = nn.Linear(hidden_dim, 4)              # 4个离散按钮
+        self.stick_head = nn.Linear(hidden_dim, action_dim - 4)  
+        self.button_head = nn.Linear(hidden_dim, 4)              
 
     def forward(self, img):
-        # 1. 图像编码
+        # 1. image encoder
         s = self.encoder(img)
         # 2. VQ to latent
         z_q, _ = self.vq(s)
