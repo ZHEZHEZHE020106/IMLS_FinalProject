@@ -74,13 +74,12 @@ def test(args):
             total_button += button_l
             total_steps += 1
 
-            # 保存第一 batch 的可视化
             if i == 0:
                 os.makedirs(args.output_dir, exist_ok=True)
                 grid_gt = vutils.make_grid(s2.cpu(), nrow=4, normalize=True)
                 grid_pd = vutils.make_grid(s2_pred.cpu(), nrow=4, normalize=True)
-                plt.imsave(os.path.join(args.output_dir, 'gt_grid.png'), grid_gt.permute(1,2,0).numpy())
-                plt.imsave(os.path.join(args.output_dir, 'pred_grid.png'), grid_pd.permute(1,2,0).numpy())
+                plt.imsave(os.path.join(args.output_dir, 'GroundTrue_grid.png'), grid_gt.permute(1,2,0).numpy())
+                plt.imsave(os.path.join(args.output_dir, 'Predicted_grid.png'), grid_pd.permute(1,2,0).numpy())
 
 
     print("==== Test Results ====")
@@ -94,11 +93,11 @@ def test(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Test Latent Action Model')
     parser.add_argument('--model_dir', type=str,
-                        help='保存模型的目录路径', default= "C://Users//44753//Desktop//SavedModels")
+                        help='saved_model_dir', default= "C://Users//44753//Desktop//SavedModels")
     parser.add_argument('--output_dir', type=str, default='C://Users//44753//Desktop//EvalResults',
-                        help='测试输出（图像和日志）保存目录')
+                        help='output_save_dir')
     parser.add_argument('--batch_size', type=int, default=64,
-                        help='测试时的 batch size')
+                        help='testing batch size')
     parser.add_argument('--vq_commitment', type=float, default=0.05,
                         help='VQ commitment weight')
     args = parser.parse_args()
