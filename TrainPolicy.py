@@ -3,6 +3,7 @@
 import torch
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
+import os
 
 from Dataset import VideoFrameActionDataset
 from Models.VectorQuantizer import VectorQuantizerEMA
@@ -35,7 +36,7 @@ def train():
     for p in vq.parameters():      p.requires_grad = False
 
     # —— TeacherPolicy lam —— 
-    teacher = TeacherPolicy(encoder, vq).to(device).train()
+    teacher = TeacherPolicy(encoder).to(device).train()
     for name, p in teacher.named_parameters():
         if not name.startswith('lam'):
             p.requires_grad = False
@@ -66,7 +67,7 @@ def train():
                 z_hat = idm(s1, s2)
                 z_q, _ = vq(z_hat)
             # Teacher predict latent action
-            z_pred, _, _ = teacher(img1)
+            z_pred, _, _ = teacher(img1,img2)
             # MSE
             loss_t = torch.nn.functional.mse_loss(z_pred, z_q)
             optimizer_t.zero_grad()
@@ -78,15 +79,19 @@ def train():
         teacher_losses.append(avg_loss)
         print(f"Teacher Epoch {epoch}/{epochs_t}, Loss: {avg_loss:.6f}")
 
+    # Save Model
+    torch.save(teacher.state_dict(), os.path.join(save_dir, "teacher.pth"))
+
     # 2) train StudentPolicy.lam
     optimizer_s = torch.optim.Adam(student.lam.parameters(), lr=lr_s)
     for epoch in range(1, epochs_s+1):
         running_loss = 0.0
-        for (img1, _), _, _ in dataloader:
+        for (img1, img2), _, _ in dataloader:
             img1 = img1.to(device)
+            img2 = img2.to(device)
 
             with torch.no_grad():
-                z_teacher, _, _ = teacher(img1)
+                z_teacher, _, _ = teacher(img1,img2)
             # Student predict
             z_student = student(img1)
             # Distill Loss
@@ -99,6 +104,9 @@ def train():
         avg_loss = running_loss / len(dataloader)
         student_losses.append(avg_loss)
         print(f"Student Epoch {epoch}/{epochs_s}, Loss: {avg_loss:.6f}")
+
+    # Save Model
+    torch.save(student.state_dict(), os.path.join(save_dir, "student.pth"))
 
      # —— Plotting —— 
     # Teacher Plotting
